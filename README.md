@@ -1,1 +1,1 @@
-﻿# TeamProjects Front-End
+# TeamProjects Front-End
