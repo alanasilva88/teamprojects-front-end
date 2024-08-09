@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getEquipes, addEquipes, deleteEquipes } from '../api/equipes';
 import { getUsuarios } from '../api/usuarios';
 import { Button, Form } from 'react-bootstrap';
+import toast from 'react-hot-toast';
 
 function Equipes() {
   const [equipes, setEquipes] = useState([]);
@@ -15,6 +16,7 @@ function Equipes() {
       const dados = await getEquipes();
       setEquipes(dados);
     } catch (error) {
+      toast.error("Erro ao carregar equipes");
       console.error("Erro ao carregar equipes", error);
     }
   }
@@ -24,6 +26,7 @@ function Equipes() {
       const dados = await getUsuarios();
       setUsuarios(dados);
     } catch (error) {
+      toast.error("Erro ao carregar usuários");
       console.error("Erro ao carregar usuários", error);
     }
   }
@@ -37,7 +40,9 @@ function Equipes() {
       setDescricao('');
       setUsuariosSelecionados([]);
       carregarEquipes();
+      toast.success("Equipe criada com sucesso!");
     } catch (error) {
+      toast.error("Erro ao adicionar equipe");
       console.error("Erro ao adicionar equipe", error);
     }
   }
@@ -48,7 +53,9 @@ function Equipes() {
       try {
         await deleteEquipes(id);
         carregarEquipes();
+        toast.success("Equipe excluída com sucesso!");
       } catch (error) {
+        toast.error("Erro ao excluir equipe");
         console.error("Erro ao deletar equipe", error);
       }
     }
@@ -102,36 +109,47 @@ function Equipes() {
               ))}
             </Form.Control>
           </Form.Group>
-          <Button variant="primary" type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
+          <Button 
+            type="submit" 
+            className="bg-blue-500 text-white p-3 rounded-lg w-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
             Adicionar Equipe
           </Button>
         </Form>
-        <div className="space-y-6 mt-8">
-          {equipes.map(equipe => (
-            <div key={equipe.id} className="bg-gray-50 p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold text-gray-800">{equipe.nome}</h3>
-              <p className="text-gray-700 mt-2">{equipe.descricao}</p>
-              <div className="mt-4">
-                <h4 className="font-medium text-gray-800">Usuários na equipe:</h4>
-                {equipe.usuarios && equipe.usuarios.length > 0 ? (
-                  <ul className="list-disc list-inside ml-5 text-gray-700">
-                    {equipe.usuarios.map(usuario => (
-                      <li key={usuario.id} className="flex items-center space-x-2">
-                        <span className="flex-1">{usuario.nome}</span>
-                        <span className="flex-1 text-gray-600">{usuario.email}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-600">Nenhum usuário associado</p>
-                )}
+      </div>
+      <div className="mt-10">
+        <h3 className="text-2xl font-semibold mb-4 text-gray-800">Lista de Equipes</h3>
+        <ul>
+          {equipes.map((equipe) => (
+            <li key={equipe.id} className="bg-white shadow-md rounded-lg p-4 mb-4 flex justify-between items-center">
+              <div>
+                <h4 className="text-xl font-bold">{equipe.nome}</h4>
+                <p className="text-gray-600">{equipe.descricao}</p>
+                <div className="mt-4">
+                  <h4 className="font-medium text-gray-800">Usuários na equipe:</h4>
+                  {equipe.usuarios && equipe.usuarios.length > 0 ? (
+                    <ul className="list-disc list-inside ml-5 text-gray-700">
+                      {equipe.usuarios.map(usuario => (
+                        <li key={usuario.id} className="flex items-center space-x-2">
+                          <span className="flex-1">{usuario.nome}</span>
+                          <span className="flex-1 text-gray-600">{usuario.email}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-600">Nenhum usuário associado</p>
+                  )}
+                </div>
               </div>
-              <Button variant="danger" onClick={() => deletarEquipe(equipe.id)} className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">
+              <Button 
+                onClick={() => deletarEquipe(equipe.id)} 
+                className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
                 Excluir
               </Button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </div>
   );

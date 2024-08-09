@@ -1,58 +1,66 @@
 import { useEffect, useState } from 'react';
 import { getProjetos, addProjeto, deleteProjeto } from '../api/projetos';
-import { getUsuarios } from '../api/usuarios';
+import { getEquipes } from '../api/equipes';
 import { Button, Form } from 'react-bootstrap';
+import toast from 'react-hot-toast';
 
 function Projetos() {
   const [projetos, setProjetos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
+  const [equipes, setEquipes] = useState([]);
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
-  const [data_inicio, setDataInicio] = useState('');
-  const [data_final, setDataFinal] = useState('');
-  const [usuariosSelecionados, setUsuariosSelecionados] = useState([]);
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFinal, setDataFinal] = useState('');
+  const [equipeId, setEquipeId] = useState('');
 
   async function carregarProjetos() {
     try {
       const dados = await getProjetos();
+      console.log("Dados dos projetos:", dados);
       setProjetos(dados);
     } catch (error) {
+      toast.error("Erro ao carregar projetos");
       console.error("Erro ao carregar projetos", error);
     }
   }
 
-  async function carregarUsuarios() {
+  async function carregarEquipes() {
     try {
-      const dados = await getUsuarios();
-      setUsuarios(dados);
+      const dados = await getEquipes();
+      setEquipes(dados);
     } catch (error) {
-      console.error("Erro ao carregar usuários", error);
+      toast.error("Erro ao carregar equipes");
+      console.error("Erro ao carregar equipes", error);
     }
   }
 
   async function criarProjeto(event) {
     event.preventDefault();
     try {
-      const novoProjeto = { nome, descricao, data_inicio, data_final, usuarios: usuariosSelecionados };
+      const novoProjeto = { nome, descricao, data_inicio: dataInicio, data_final: dataFinal, equipeId };
       await addProjeto(novoProjeto);
       setNome('');
       setDescricao('');
       setDataInicio('');
       setDataFinal('');
-      setUsuariosSelecionados([]);
+      setEquipeId('');
       carregarProjetos();
+      toast.success("Projeto criado com sucesso!");
     } catch (error) {
+      toast.error("Erro ao adicionar projeto.");
       console.error("Erro ao adicionar projeto", error);
     }
   }
 
   async function deletarProjeto(id) {
-    const deletar = confirm("Tem certeza que deseja excluir?");
+    const deletar = window.confirm("Tem certeza que deseja excluir?");
     if (deletar) {
       try {
         await deleteProjeto(id);
         carregarProjetos();
+        toast.success("Projeto deletado com sucesso!");
       } catch (error) {
+        toast.error("Erro ao deletar projeto.");
         console.error("Erro ao deletar projeto", error);
       }
     }
@@ -60,7 +68,7 @@ function Projetos() {
 
   useEffect(() => {
     carregarProjetos();
-    carregarUsuarios();
+    carregarEquipes();
   }, []);
 
   return (
@@ -94,69 +102,65 @@ function Projetos() {
             <Form.Label className="text-lg font-medium text-gray-700 w-full">Data de Início</Form.Label>
             <Form.Control 
               type="date" 
-              value={data_inicio} 
+              value={dataInicio} 
               onChange={(e) => setDataInicio(e.target.value)} 
               required 
               className="border-2 border-gray-300 rounded-lg p-3 w-full focus:border-blue-500 focus:outline-none"
             />
           </Form.Group>
           <Form.Group controlId="formDataFinal" className="mb-5">
-            <Form.Label className="text-lg font-medium text-gray-700 w-full">Data Final</Form.Label>
+            <Form.Label className="text-lg font-medium text-gray-700 w-full">Data de Término</Form.Label>
             <Form.Control 
               type="date" 
-              value={data_final} 
+              value={dataFinal} 
               onChange={(e) => setDataFinal(e.target.value)} 
               className="border-2 border-gray-300 rounded-lg p-3 w-full focus:border-blue-500 focus:outline-none"
             />
           </Form.Group>
-          <Form.Group controlId="formUsuarios" className="mb-5">
-            <Form.Label className="text-lg font-medium text-gray-700 w-full">Usuários</Form.Label>
+          <Form.Group controlId="formEquipe" className="mb-5">
+            <Form.Label className="text-lg font-medium text-gray-700 w-full">Equipe</Form.Label>
             <Form.Control 
               as="select" 
-              multiple 
-              value={usuariosSelecionados} 
-              onChange={(e) => setUsuariosSelecionados([...e.target.selectedOptions].map(option => option.value))}
+              value={equipeId} 
+              onChange={(e) => setEquipeId(e.target.value)} 
+              required 
               className="border-2 border-gray-300 rounded-lg p-3 w-full focus:border-blue-500 focus:outline-none"
             >
-              {usuarios.map(usuario => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nome}
-                </option>
+              <option value="">Selecione uma equipe</option>
+              {equipes.map((equipe) => (
+                <option key={equipe.id} value={equipe.id}>{equipe.nome}</option>
               ))}
             </Form.Control>
           </Form.Group>
-          <Button variant="primary" type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">
-            Adicionar Projeto
+          <Button 
+            type="submit" 
+            className="bg-blue-500 text-white p-3 rounded-lg w-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Criar Projeto
           </Button>
         </Form>
-        <div className="space-y-6 mt-8">
-          {projetos.map(projeto => (
-            <div key={projeto.id} className="bg-gray-50 p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold text-gray-800">{projeto.nome}</h3>
-              <p className="text-gray-700 mt-2">{projeto.descricao}</p>
-              <p className="text-gray-600 mt-2">Início: {projeto.dataInicio}</p>
-              <p className="text-gray-600 mt-2">Final: {projeto.dataFinal || "Não definido"}</p>
-              <div className="mt-4">
-                <h4 className="font-medium text-gray-800">Usuários no projeto:</h4>
-                {projeto.usuarios && projeto.usuarios.length > 0 ? (
-                  <ul className="list-disc list-inside ml-5 text-gray-700">
-                    {projeto.usuarios.map(usuario => (
-                      <li key={usuario.id} className="flex items-center space-x-2">
-                        <span className="flex-1">{usuario.nome}</span>
-                        <span className="flex-1 text-gray-600">{usuario.email}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-600">Nenhum usuário associado</p>
-                )}
+      </div>
+      <div className="mt-10">
+        <h3 className="text-2xl font-semibold mb-4 text-gray-800">Lista de Projetos</h3>
+        <ul>
+          {projetos.map((projeto) => (
+            <li key={projeto.id} className="bg-white shadow-md rounded-lg p-4 mb-4 flex justify-between items-center">
+              <div>
+                <h4 className="text-xl font-bold">{projeto.nome}</h4>
+                <p className="text-gray-600">{projeto.descricao}</p>
+                <p className="text-gray-600">Equipe: {projeto.equipe ? projeto.equipe.nome : "Sem equipe"}</p>
+                <p className="text-gray-600">Início: {projeto.data_inicio}</p>
+                <p className="text-gray-600">Término: {projeto.data_final}</p>
               </div>
-              <Button variant="danger" onClick={() => deletarProjeto(projeto.id)} className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">
+              <Button 
+                onClick={() => deletarProjeto(projeto.id)} 
+                className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
                 Excluir
               </Button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </div>
   );
